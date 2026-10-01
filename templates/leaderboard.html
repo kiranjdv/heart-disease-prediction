@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}ProHealth • Model Benchmark Leaderboard{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 24px;">
+  <h1 style="font-size: 2rem; font-weight: 800; color: #0F172A; margin: 0;">Machine Learning Model Leaderboard</h1>
+  <p style="color: #64748B; font-size: 0.95rem; margin-top: 4px;">
+    Benchmarking 6 clinical classifiers on an unseen test cohort (n=61) with 5-fold cross-validation.
+  </p>
+</div>
+
+<div class="med-card">
+  <div class="card-header-flex">
+    <span class="card-title-lg">Model Comparison Leaderboard</span>
+    <span style="font-size: 0.8rem; font-weight: 700; color: #10B981; background: #ECFDF5; padding: 4px 12px; border-radius: 9999px;">
+      Active Engine: KNN (k=7)
+    </span>
+  </div>
+
+  <div class="table-container">
+    <table class="pro-table">
+      <thead>
+        <tr>
+          <th>Model</th>
+          <th>Accuracy</th>
+          <th>Precision</th>
+          <th>Recall (Sensitivity)</th>
+          <th>F1 Score</th>
+          <th>ROC-AUC</th>
+          <th>5-Fold CV Mean</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in models %}
+        <tr {% if m.Model == 'KNN' %}style="background: #F0FDF4; font-weight: 700;"{% endif %}>
+          <td>
+            {{ m.Model }}
+            {% if m.Model == 'KNN' %}
+              <span class="status-chip status-ok" style="margin-left: 8px;">Deployed</span>
+            {% endif %}
+          </td>
+          <td>{{ "%.4f"|format(m.Accuracy) }}</td>
+          <td>{{ "%.4f"|format(m.Precision) }}</td>
+          <td><b style="color: #059669;">{{ "%.4f"|format(m.Recall) }}</b></td>
+          <td>{{ "%.4f"|format(m.F1) }}</td>
+          <td><b style="color: #2563EB;">{{ "%.4f"|format(m.ROC_AUC) }}</b></td>
+          <td>{{ "%.4f"|format(m.CV_Mean) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="med-card" style="margin-top: 24px;">
+  <span class="card-title-lg">Clinical Significance of Recall in Cardiovascular Screening</span>
+  <p style="color: #475569; font-size: 0.92rem; line-height: 1.6; margin-top: 10px;">
+    In healthcare diagnostic systems, <b>Sensitivity / Recall</b> takes priority over raw accuracy. Missing a patient who genuinely suffers from coronary artery disease (a <b>False Negative</b>) carries grave clinical prognosis, as the patient remains untreated. Both <b>KNN (90.91% Recall)</b> and <b>SVM (93.94% Recall)</b> ensure that over 9 out of 10 at-risk individuals are reliably flagged for secondary cardiologist consultation and angiography.
+  </p>
+</div>
+{% endblock %}

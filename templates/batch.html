@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}ProHealth • Batch Patient Screening{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 24px;">
+  <h1 style="font-size: 2rem; font-weight: 800; color: #0F172A; margin: 0;">Institutional Cohort Screening</h1>
+  <p style="color: #64748B; font-size: 0.95rem; margin-top: 4px;">
+    High-throughput automated risk stratification for hospital patient registries and research trials.
+  </p>
+</div>
+
+<div class="med-card">
+  <div class="card-header-flex">
+    <span class="card-title-lg">Upload Patient Records (CSV)</span>
+    <a href="/api/download-template" class="action-link" style="display: inline-flex; align-items: center; gap: 6px;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+      </svg>
+      Download Verified CSV Template
+    </a>
+  </div>
+
+  <form id="batchUploadForm" style="margin-top: 14px; display: flex; gap: 16px; align-items: center;">
+    <input type="file" id="csvFileInput" accept=".csv" class="form-input" style="flex-grow: 1; padding: 8px 14px;" required>
+    <button type="submit" class="btn-primary" style="width: auto; padding: 10px 24px;">Upload & Screen Cohort</button>
+  </form>
+</div>
+
+<!-- Results summary cards -->
+<div id="batchStats" class="stats-grid-2" style="display: none; grid-template-columns: repeat(4, 1fr); margin-top: 24px;">
+  <div class="stat-tile">
+    <div class="stat-tile-header">Total Screened</div>
+    <div class="stat-tile-num" id="totalCount">0</div>
+  </div>
+  <div class="stat-tile">
+    <div class="stat-tile-header">High Risk Detected</div>
+    <div class="stat-tile-num" id="highRiskCount" style="color: #EF4444;">0</div>
+  </div>
+  <div class="stat-tile">
+    <div class="stat-tile-header">Low Risk Healthy</div>
+    <div class="stat-tile-num" id="lowRiskCount" style="color: #10B981;">0</div>
+  </div>
+  <div class="stat-tile">
+    <div class="stat-tile-header">Average Risk</div>
+    <div class="stat-tile-num" id="avgRisk">0%</div>
+  </div>
+</div>
+
+<!-- Results Table -->
+<div id="batchResultsTable" class="med-card" style="display: none; margin-top: 24px;">
+  <span class="card-title-lg">Screening Output Preview (Top Cohort Records)</span>
+  <div class="table-container">
+    <table class="pro-table">
+      <thead>
+        <tr>
+          <th>Patient</th>
+          <th>Blood Pressure</th>
+          <th>Cholesterol</th>
+          <th>Max HR</th>
+          <th>ST Depression</th>
+          <th>Major Vessels</th>
+          <th>Risk Tier</th>
+          <th>Probability</th>
+        </tr>
+      </thead>
+      <tbody id="batchTableBody">
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

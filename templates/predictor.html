@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}ProHealth • Diagnostic Results & Predictor{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 20px;">
+  <h1 style="font-size: 2rem; font-weight: 800; color: #0F172A; margin: 0;">Clinical Diagnostic Predictor</h1>
+  <p style="color: #64748B; font-size: 0.95rem; margin-top: 4px;">
+    Systematic risk stratification powered by K-Nearest Neighbors (k=7) and Standardized Euclidean features.
+  </p>
+</div>
+
+<div class="dashboard-grid">
+  <!-- Intake Form -->
+  <div class="med-card">
+    <div class="card-header-flex">
+      <span class="card-title-lg">Patient Biomarkers & Stress Vitals</span>
+      <span style="font-size: 0.8rem; font-weight: 700; color: #2563EB;">13 Clinical Predictors</span>
+    </div>
+
+    <form id="fullPredictorForm">
+      <div class="form-grid-3" style="margin-top: 10px;">
+        <div>
+          <div class="form-group">
+            <label class="form-label">Age</label>
+            <input type="number" id="inp_age" name="age" class="form-input" value="{{ vitals.age }}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Sex</label>
+            <select id="inp_sex" name="sex" class="form-select">
+              <option value="1" {% if vitals.sex == 1 %}selected{% endif %}>Male (1)</option>
+              <option value="0" {% if vitals.sex == 0 %}selected{% endif %}>Female (0)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Resting BP (mm Hg)</label>
+            <input type="number" id="inp_trestbps" name="trestbps" class="form-input" value="{{ vitals.trestbps }}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Serum Cholesterol (mg/dl)</label>
+            <input type="number" id="inp_chol" name="chol" class="form-input" value="{{ vitals.chol }}" required>
+          </div>
+        </div>
+
+        <div>
+          <div class="form-group">
+            <label class="form-label">Chest Pain Type</label>
+            <select id="inp_cp" name="cp" class="form-select">
+              <option value="0" {% if vitals.cp == 0 %}selected{% endif %}>Typical Angina (0)</option>
+              <option value="1" {% if vitals.cp == 1 %}selected{% endif %}>Atypical Angina (1)</option>
+              <option value="2" {% if vitals.cp == 2 %}selected{% endif %}>Non-Anginal (2)</option>
+              <option value="3" {% if vitals.cp == 3 %}selected{% endif %}>Asymptomatic (3)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fasting Sugar > 120 mg/dl</label>
+            <select id="inp_fbs" name="fbs" class="form-select">
+              <option value="0" {% if vitals.fbs == 0 %}selected{% endif %}>Normal (0)</option>
+              <option value="1" {% if vitals.fbs == 1 %}selected{% endif %}>Elevated (1)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Resting ECG</label>
+            <select id="inp_restecg" name="restecg" class="form-select">
+              <option value="0" {% if vitals.restecg == 0 %}selected{% endif %}>Normal (0)</option>
+              <option value="1" {% if vitals.restecg == 1 %}selected{% endif %}>ST-T Abnormality (1)</option>
+              <option value="2" {% if vitals.restecg == 2 %}selected{% endif %}>LV Hypertrophy (2)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Max Heart Rate (bpm)</label>
+            <input type="number" id="inp_thalach" name="thalach" class="form-input" value="{{ vitals.thalach }}" required>
+          </div>
+        </div>
+
+        <div>
+          <div class="form-group">
+            <label class="form-label">Exercise Angina</label>
+            <select id="inp_exang" name="exang" class="form-select">
+              <option value="0" {% if vitals.exang == 0 %}selected{% endif %}>No (0)</option>
+              <option value="1" {% if vitals.exang == 1 %}selected{% endif %}>Yes (1)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">ST Depression (oldpeak)</label>
+            <input type="number" step="0.1" id="inp_oldpeak" name="oldpeak" class="form-input" value="{{ vitals.oldpeak }}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">ST Slope</label>
+            <select id="inp_slope" name="slope" class="form-select">
+              <option value="0" {% if vitals.slope == 0 %}selected{% endif %}>Upsloping (0)</option>
+              <option value="1" {% if vitals.slope == 1 %}selected{% endif %}>Flat (1)</option>
+              <option value="2" {% if vitals.slope == 2 %}selected{% endif %}>Downsloping (2)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fluoroscopy Vessels (ca)</label>
+            <select id="inp_ca" name="ca" class="form-select">
+              <option value="0" {% if vitals.ca == 0 %}selected{% endif %}>0 Vessels</option>
+              <option value="1" {% if vitals.ca == 1 %}selected{% endif %}>1 Vessel</option>
+              <option value="2" {% if vitals.ca == 2 %}selected{% endif %}>2 Vessels</option>
+              <option value="3" {% if vitals.ca == 3 %}selected{% endif %}>3 Vessels</option>
+            </select>
+          </div>
+          <input type="hidden" id="inp_thal" name="thal" value="{{ vitals.thal }}">
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary">⚡ Compute Precision Risk Assessment</button>
+    </form>
+  </div>
+
+  <!-- Real-time Diagnostic Verdict -->
+  <div class="med-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+    <div>
+      <span class="card-title-lg">Diagnostic Verdict</span>
+      <div style="margin-top: 24px; text-align: center;">
+        <span id="verdictBadge" class="status-chip {% if pred == 1 %}status-high{% else %}status-ok{% endif %}" style="font-size: 0.95rem; padding: 6px 18px;">
+          {% if pred == 1 %}HIGH CARDIOVASCULAR RISK{% else %}LOW CARDIOVASCULAR RISK{% endif %}
+        </span>
+        <h1 id="verdictProb" style="font-size: 3.5rem; font-weight: 800; color: {% if pred == 1 %}#EF4444{% else %}#10B981{% endif %}; margin: 16px 0 6px 0;">
+          {{ "%.1f"|format(prob * 100) }}%
+        </h1>
+        <div style="font-size: 0.9rem; color: #64748B; font-weight: 600;">Calibrated Probability of Coronary Artery Disease</div>
+      </div>
+
+      <div style="margin-top: 24px; padding: 16px; background: #F8FAFC; border-radius: 16px; border: 1px solid var(--border-subtle);">
+        <div style="font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 8px;">IDENTIFIED CLINICAL RISK TRIGGERS:</div>
+        <ul id="triggersList" style="font-size: 0.85rem; color: #64748B; margin-left: 20px; line-height: 1.6;">
+          {% if vitals.trestbps >= 140 %}<li>⚠️ Elevated Blood Pressure ({{ vitals.trestbps }} mmHg)</li>{% endif %}
+          {% if vitals.chol >= 240 %}<li>⚠️ Hypercholesterolemia ({{ vitals.chol }} mg/dl)</li>{% endif %}
+          {% if vitals.oldpeak >= 1.5 %}<li>⚠️ Exercise ST Depression ({{ vitals.oldpeak }} mm)</li>{% endif %}
+          {% if vitals.ca > 0 %}<li>⚠️ Fluoroscopy indicates {{ vitals.ca }} obstructed vessel(s)</li>{% endif %}
+          {% if vitals.trestbps < 140 and vitals.chol < 240 and vitals.oldpeak < 1.5 and vitals.ca == 0 %}
+            <li style="color: #15803D;">✅ Primary biomarkers are within acceptable non-critical ranges.</li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+
+    <button id="downloadReportBtn" class="btn-primary" style="background: #0F172A; margin-top: 20px;">
+      📄 Download Official Clinical Report (.pdf)
+    </button>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('fullPredictorForm');
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(form);
+      const payload = {};
+      formData.forEach((v, k) => payload[k] = parseFloat(v));
+
+      const res = await fetch('/api/predict', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('verdictProb').innerText = `${data.probability_percent}%`;
+        document.getElementById('verdictProb').style.color = data.prediction === 1 ? '#EF4444' : '#10B981';
+        
+        const badge = document.getElementById('verdictBadge');
+        badge.innerText = data.risk_label.toUpperCase();
+        badge.className = `status-chip ${data.prediction === 1 ? 'status-high' : 'status-ok'}`;
+
+        const trigUl = document.getElementById('triggersList');
+        trigUl.innerHTML = '';
+        if (data.triggers.length) {
+          data.triggers.forEach(t => {
+            const li = document.createElement('li');
+            li.innerText = `⚠️ ${t}`;
+            trigUl.appendChild(li);
+          });
+        } else {
+          trigUl.innerHTML = '<li style="color:#15803D;">✅ Primary biomarkers are within acceptable non-critical ranges.</li>';
+        }
+      }
+    });
+  }
+
+  const dloadBtn = document.getElementById('downloadReportBtn');
+  if (dloadBtn) {
+    dloadBtn.addEventListener('click', async () => {
+      dloadBtn.innerText = '⏳ Generating PDF...';
+      const formData = new FormData(form);
+      const payload = {};
+      formData.forEach((v, k) => payload[k] = parseFloat(v));
+
+      try {
+        const res = await fetch('/api/download-report-pdf', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload)
+        });
+        const blob = await res.blob();
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `prohealth_cardio_report_${payload.age || 50}yo.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } catch (err) {
+        alert('Error generating clinical PDF.');
+      } finally {
+        dloadBtn.innerText = '📄 Download Official Clinical Report (.pdf)';
+      }
+    });
+  }
+});
+</script>
+{% endblock %}

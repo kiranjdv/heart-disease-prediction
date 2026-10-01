@@ -12,10 +12,12 @@ heart-disease-prediction/
 ├── src/
 │   ├── preprocess.py              # Data loading & cleaning
 │   ├── train.py                   # Trains & compares 6 models
-│   └── evaluate.py                # EDA plots + feature importance
-├── app/
-│   └── app.py                     # Streamlit prediction app
+│   ├── evaluate.py                # EDA plots + feature importance
+│   └── pdf_generator.py           # Clinical PDF diagnostic report generator
+├── static/                        # CSS, JS, 3D anatomical assets
+├── templates/                     # Flask Jinja2 UI views
 ├── models/                        # Saved model, scaler, figures (generated)
+├── app.py                         # Interactive Flask Medical Intelligence Application
 ├── requirements.txt
 └── README.md
 ```
@@ -37,8 +39,9 @@ python src/train.py
 # 2. Generate EDA plots + feature importance (saves to models/figures/)
 python src/evaluate.py
 
-# 3. Launch the interactive prediction app
-streamlit run app/app.py
+# 3. Launch the interactive ProHealth Cardiology Dashboard
+python app.py
+# (Runs locally at http://localhost:5000)
 ```
 
 ## Dataset

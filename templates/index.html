@@ -1,0 +1,381 @@
+{% extends "base.html" %}
+
+{% block title %}ProHealth • Heart Analysis Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-grid">
+  <!-- LEFT COLUMN: 3D ANATOMICAL HEART & VISUAL ANALYSIS -->
+  <section class="left-section">
+    <div class="heart-section-header">
+      <h1 class="page-main-title">Heart<br>Analysis</h1>
+    </div>
+
+    <!-- 3D Heart Stage with Floating Live Callouts -->
+    <div class="heart-stage">
+      <div class="pulse-ring-1"></div>
+      <div class="pulse-ring-2"></div>
+
+      <!-- 3D Heart Image -->
+      <img src="{{ url_for('static', filename='images/heart_3d.jpg') }}" alt="3D Anatomical Heart" class="heart-image-3d">
+
+      <!-- Top Right Floating Chip: AI Risk -->
+      <div class="callout-badge callout-top-right">
+        <div class="callout-label">
+          AI Risk Stratification
+          <span id="floatingRiskBadge" class="status-chip {% if pred == 1 %}status-high{% else %}status-ok{% endif %}">
+            {% if pred == 1 %}High Risk{% else %}Low Risk{% endif %}
+          </span>
+        </div>
+        <div class="callout-val" id="floatingRiskVal">
+          {{ "%.1f"|format(prob * 100) }}% <span class="callout-unit">Probability</span>
+        </div>
+      </div>
+
+      <!-- Bottom Left Floating Chip: Blood Pressure -->
+      <div class="callout-badge callout-bottom-left">
+        <div class="callout-label">
+          Blood pressure
+          <span class="status-chip {% if vitals.trestbps <= 120 %}status-ok{% elif vitals.trestbps <= 139 %}status-elevated{% else %}status-high{% endif %}">
+            {% if vitals.trestbps <= 120 %}Ok{% elif vitals.trestbps <= 139 %}Elevated{% else %}High{% endif %}
+          </span>
+        </div>
+        <div class="callout-val">
+          <span id="floatingBpVal">{{ vitals.trestbps }}/80</span> <span class="callout-unit">mmHg</span>
+        </div>
+      </div>
+
+      <!-- Bottom Right Floating Chip: Max Heart Rate -->
+      <div class="callout-badge callout-bottom-right">
+        <div class="callout-label">
+          Max Heart Rate
+          <span class="status-chip {% if vitals.thalach >= 140 %}status-ok{% else %}status-elevated{% endif %}">
+            {% if vitals.thalach >= 140 %}Normal{% else %}Low Reserve{% endif %}
+          </span>
+        </div>
+        <div class="callout-val">
+          <span id="floatingHrVal">{{ vitals.thalach }}</span> <span class="callout-unit">bpm</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stage Footer -->
+    <div class="stage-footer">
+      <a href="{{ url_for('predictor') }}" class="link-visit">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M7 17L17 7M7 7h10v10"/>
+        </svg>
+        Visit detailed diagnostic suite
+      </a>
+    </div>
+  </section>
+
+  <!-- RIGHT COLUMN: PATIENT DETAILS & SCHEDULE -->
+  <section class="right-section">
+    <!-- Patient Details Card -->
+    <!-- Patient Details Card -->
+    <div class="med-card">
+      <div class="card-header-flex">
+        <span class="card-title-lg">Patient Profile</span>
+        <button id="editDetailsBtn" class="action-link" style="background:none; border:none; cursor:pointer;">Edit Vitals</button>
+      </div>
+
+      <div class="patient-info-row">
+        <div class="patient-avatar-box">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+          </svg>
+        </div>
+        <div class="patient-meta-grid">
+          <div>
+            <div class="meta-field-label">Full Name</div>
+            <div class="meta-field-val" id="patientNameVal">{{ patient.name }}</div>
+            <div class="meta-field-label" style="margin-top: 10px;">Demographics</div>
+            <div class="meta-field-val" id="patientDemographicsVal" style="color: #475569;">
+              {{ vitals.age }} yrs • {% if vitals.sex == 1 %}Male{% else %}Female{% endif %}
+            </div>
+          </div>
+          <div>
+            <div class="meta-field-label">Attending Clinician</div>
+            <div class="meta-field-val">Dr. {{ patient.doctor }}</div>
+            <div class="meta-field-label" style="margin-top: 10px;">Clinical Impression</div>
+            <div class="meta-field-val" id="patientDiagNote" style="color: {% if pred == 1 %}#EF4444{% else %}#15803D{% endif %}; font-weight: 700;">
+              {{ patient.diagnosis }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Patient Record Identifier Bar -->
+      <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 0.78rem; font-weight: 700; color: #94A3B8; text-transform: uppercase;">Active Record:</span>
+          <span class="pid-pill" style="font-size: 0.8rem;">{{ patient.id }}</span>
+        </div>
+        <button onclick="document.getElementById('searchRecordsBtn').click();" class="action-link" style="background: none; border: none; cursor: pointer; font-size: 0.8rem; font-weight: 700; color: #2563EB; display: flex; align-items: center; gap: 4px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          Select from 303 Patients &rarr;
+        </button>
+      </div>
+    </div>
+
+    <!-- Clinical Diagnostic Biomarkers Grid (Replaced static Weight & Height) -->
+    <div class="stats-grid-2">
+      <!-- Serum Cholesterol Tile -->
+      <div class="stat-tile">
+        <div class="stat-tile-header">
+          <span style="display:flex; align-items:center; gap:6px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+            </svg>
+            Cholesterol
+          </span>
+          <span id="cholStatusBadge" class="status-chip {% if vitals.chol < 200 %}status-ok{% elif vitals.chol < 240 %}status-elevated{% else %}status-high{% endif %}">
+            {% if vitals.chol < 200 %}Normal{% elif vitals.chol < 240 %}Borderline{% else %}High{% endif %}
+          </span>
+        </div>
+        <div class="stat-tile-num" id="biomarkerCholVal">
+          {{ vitals.chol }} <span style="font-size: 0.85rem; font-weight: 600; color: #64748B;">mg/dl</span>
+        </div>
+        <div id="cholSubtext" style="font-size: 0.74rem; color: #64748B; margin-top: 4px;">
+          {% if vitals.chol < 200 %}Optimal target (<200){% elif vitals.chol < 240 %}Borderline high (200–239){% else %}Hypercholesterolemia (≥240){% endif %}
+        </div>
+      </div>
+
+      <!-- ST Depression (oldpeak) Tile -->
+      <div class="stat-tile">
+        <div class="stat-tile-header">
+          <span style="display:flex; align-items:center; gap:6px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#E11D48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+            </svg>
+            ST Depression
+          </span>
+          <span id="stStatusBadge" class="status-chip {% if vitals.oldpeak < 1.0 %}status-ok{% elif vitals.oldpeak < 2.0 %}status-elevated{% else %}status-high{% endif %}">
+            {% if vitals.oldpeak < 1.0 %}Normal{% elif vitals.oldpeak < 2.0 %}Mild{% else %}Ischemic{% endif %}
+          </span>
+        </div>
+        <div class="stat-tile-num" id="biomarkerStVal">
+          {{ vitals.oldpeak }} <span style="font-size: 0.85rem; font-weight: 600; color: #64748B;">mm</span>
+        </div>
+        <div id="stSubtext" style="font-size: 0.74rem; color: #64748B; margin-top: 4px;">
+          {% if vitals.ca > 0 %}{{ vitals.ca }} major vessel(s) obstructed{% else %}No vessel blockage (ca=0){% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Clinical Protocol & Action Plan Card (Replaced static My Schedule) -->
+    <div class="med-card" id="clinicalProtocolCard">
+      <div class="card-header-flex">
+        <span class="card-title-lg">AI Clinical Protocol</span>
+        <span id="protocolRiskBadge" class="status-chip {% if pred == 1 %}status-high{% else %}status-ok{% endif %}">
+          {% if pred == 1 %}High Risk Care Pathway{% else %}Preventive Care Pathway{% endif %}
+        </span>
+      </div>
+      <div style="font-size: 0.75rem; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+        Evidence-Based Recommendations & Follow-Up
+      </div>
+
+      <div class="schedule-list" id="protocolList">
+        {% for rec in recommendations %}
+        <div class="schedule-row {{ rec.type }}">
+          <div>
+            <div class="sched-title">
+              {% if rec.icon == 'alert' %}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              {% elif rec.icon == 'pill' %}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m10.5 4.5 9 9a4.95 4.95 0 1 1-7 7l-9-9a4.95 4.95 0 1 1 7-7Z"></path><line x1="8.5" y1="8.5" x2="15.5" y2="15.5"></line>
+              </svg>
+              {% elif rec.icon == 'activity' %}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+              </svg>
+              {% elif rec.icon == 'calendar' %}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              {% elif rec.icon == 'heart' %}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>
+              </svg>
+              {% else %}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0284C7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              {% endif %}
+              {{ rec.title }}
+            </div>
+            <div class="sched-sub">{{ rec.sub }}</div>
+          </div>
+          <div class="sched-time-badge {{ rec.type }}">{{ rec.badge }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- AI WHAT-IF RISK SIMULATOR SECTION -->
+<section class="whatif-container">
+  <div class="whatif-header-flex">
+    <div>
+      <span class="card-title-lg">AI "What-If" Lifestyle Risk Simulator</span>
+      <p style="font-size: 0.85rem; color: #64748B; margin-top: 4px;">
+        Simulate in real time how clinical interventions and lifestyle modifications reduce this patient's cardiac risk.
+      </p>
+    </div>
+    <span style="font-size: 0.78rem; font-weight: 700; color: #2563EB; background: #EFF6FF; padding: 4px 14px; border-radius: 9999px;">
+      Preventive Cardiology AI
+    </span>
+  </div>
+
+  <div class="whatif-sliders-grid">
+    <div>
+      <!-- Target BP Slider -->
+      <div class="range-slider-group">
+        <div class="range-slider-label">
+          <span>Target Systolic Blood Pressure</span>
+          <span id="whatif_bp_val" style="color: #2563EB;">120 mmHg</span>
+        </div>
+        <input type="range" id="whatif_bp" class="range-slider-input" min="95" max="190" value="120" step="1">
+      </div>
+
+      <!-- Target Cholesterol Slider -->
+      <div class="range-slider-group">
+        <div class="range-slider-label">
+          <span>Target Serum Cholesterol</span>
+          <span id="whatif_chol_val" style="color: #2563EB;">185 mg/dl</span>
+        </div>
+        <input type="range" id="whatif_chol" class="range-slider-input" min="130" max="380" value="185" step="1">
+      </div>
+
+      <!-- Target Max Heart Rate Slider -->
+      <div class="range-slider-group">
+        <div class="range-slider-label">
+          <span>Target Aerobic Exercise Capacity (Max HR)</span>
+          <span id="whatif_hr_val" style="color: #2563EB;">165 bpm</span>
+        </div>
+        <input type="range" id="whatif_hr" class="range-slider-input" min="80" max="200" value="165" step="1">
+      </div>
+    </div>
+
+    <!-- Dynamic Output Comparison Box -->
+    <div class="comparison-box">
+      <div style="font-size: 0.75rem; color: #94A3B8; font-weight: 700; text-transform: uppercase;">Simulated Cardiac Risk Outcome</div>
+      <div style="margin: 12px 0;">
+        <span id="simulatedRiskBadge" class="status-chip status-ok" style="font-size: 0.85rem; padding: 4px 14px;">LOW RISK</span>
+      </div>
+      <h1 id="simulatedRiskProb" style="font-size: 2.8rem; font-weight: 800; color: #10B981; margin: 4px 0;">14.3%</h1>
+      <span id="simulatedDeltaBadge" class="delta-reduction-badge">-71.4% Lower Risk (ARR)</span>
+      <p style="font-size: 0.78rem; color: #64748B; margin-top: 10px;">
+        Simulated via K-Nearest Neighbors (k=7) Standardized Feature Pipeline.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- Interactive Diagnostic Modal -->
+<div id="diagnosticModal" class="modal-overlay">
+  <div class="modal-content">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h2 style="font-size: 1.4rem; font-weight: 800; color: #0F172A;">Tune Patient Clinical Vitals</h2>
+      <button id="closeModalBtn" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748B;">&times;</button>
+    </div>
+
+    <form id="diagnosticForm">
+      <div class="form-grid-3">
+        <div>
+          <div class="form-group">
+            <label class="form-label">Age (Years)</label>
+            <input type="number" name="age" class="form-input" value="{{ vitals.age }}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Biological Sex</label>
+            <select name="sex" class="form-select">
+              <option value="1" {% if vitals.sex == 1 %}selected{% endif %}>Male (1)</option>
+              <option value="0" {% if vitals.sex == 0 %}selected{% endif %}>Female (0)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Resting BP (mm Hg)</label>
+            <input type="number" name="trestbps" class="form-input" value="{{ vitals.trestbps }}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Serum Cholesterol (mg/dl)</label>
+            <input type="number" name="chol" class="form-input" value="{{ vitals.chol }}" required>
+          </div>
+        </div>
+
+        <div>
+          <div class="form-group">
+            <label class="form-label">Chest Pain Type</label>
+            <select name="cp" class="form-select">
+              <option value="0" {% if vitals.cp == 0 %}selected{% endif %}>Typical Angina (0)</option>
+              <option value="1" {% if vitals.cp == 1 %}selected{% endif %}>Atypical Angina (1)</option>
+              <option value="2" {% if vitals.cp == 2 %}selected{% endif %}>Non-Anginal (2)</option>
+              <option value="3" {% if vitals.cp == 3 %}selected{% endif %}>Asymptomatic (3)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fasting Sugar > 120 mg/dl</label>
+            <select name="fbs" class="form-select">
+              <option value="0" {% if vitals.fbs == 0 %}selected{% endif %}>Normal (0)</option>
+              <option value="1" {% if vitals.fbs == 1 %}selected{% endif %}>Elevated (1)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Resting ECG</label>
+            <select name="restecg" class="form-select">
+              <option value="0" {% if vitals.restecg == 0 %}selected{% endif %}>Normal (0)</option>
+              <option value="1" {% if vitals.restecg == 1 %}selected{% endif %}>ST-T Wave (1)</option>
+              <option value="2" {% if vitals.restecg == 2 %}selected{% endif %}>LV Hypertrophy (2)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Max Heart Rate (bpm)</label>
+            <input type="number" name="thalach" class="form-input" value="{{ vitals.thalach }}" required>
+          </div>
+        </div>
+
+        <div>
+          <div class="form-group">
+            <label class="form-label">Exercise Angina</label>
+            <select name="exang" class="form-select">
+              <option value="0" {% if vitals.exang == 0 %}selected{% endif %}>No (0)</option>
+              <option value="1" {% if vitals.exang == 1 %}selected{% endif %}>Yes (1)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">ST Depression (oldpeak)</label>
+            <input type="number" step="0.1" name="oldpeak" class="form-input" value="{{ vitals.oldpeak }}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">ST Slope</label>
+            <select name="slope" class="form-select">
+              <option value="0" {% if vitals.slope == 0 %}selected{% endif %}>Upsloping (0)</option>
+              <option value="1" {% if vitals.slope == 1 %}selected{% endif %}>Flat (1)</option>
+              <option value="2" {% if vitals.slope == 2 %}selected{% endif %}>Downsloping (2)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fluoroscopy Vessels (ca)</label>
+            <select name="ca" class="form-select">
+              <option value="0" {% if vitals.ca == 0 %}selected{% endif %}>0 Vessels</option>
+              <option value="1" {% if vitals.ca == 1 %}selected{% endif %}>1 Vessel</option>
+              <option value="2" {% if vitals.ca == 2 %}selected{% endif %}>2 Vessels</option>
+              <option value="3" {% if vitals.ca == 3 %}selected{% endif %}>3 Vessels</option>
+            </select>
+          </div>
+          <input type="hidden" name="thal" value="{{ vitals.thal }}">
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary">⚡ Run Live Inference & Update Heart Model</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
