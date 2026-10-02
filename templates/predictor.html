@@ -139,7 +139,7 @@
     </div>
 
     <button id="downloadReportBtn" class="btn-primary" style="background: #0F172A; margin-top: 20px;">
-      📄 Download Official Clinical Report (.pdf)
+      📄 Download Official Clinical Report (.csv)
     </button>
   </div>
 </div>
@@ -188,13 +188,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const dloadBtn = document.getElementById('downloadReportBtn');
   if (dloadBtn) {
     dloadBtn.addEventListener('click', async () => {
-      dloadBtn.innerText = '⏳ Generating PDF...';
+      dloadBtn.innerText = '⏳ Generating CSV...';
       const formData = new FormData(form);
       const payload = {};
       formData.forEach((v, k) => payload[k] = parseFloat(v));
 
       try {
-        const res = await fetch('/api/download-report-pdf', {
+        const res = await fetch('/api/download-report-csv', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify(payload)
@@ -202,14 +202,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const blob = await res.blob();
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = `prohealth_cardio_report_${payload.age || 50}yo.pdf`;
+        a.download = `prohealth_cardio_report_${payload.age || 50}yo.csv`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
       } catch (err) {
-        alert('Error generating clinical PDF.');
+        alert('Error generating clinical CSV.');
       } finally {
-        dloadBtn.innerText = '📄 Download Official Clinical Report (.pdf)';
+        dloadBtn.innerText = '📄 Download Official Clinical Report (.csv)';
       }
     });
   }
