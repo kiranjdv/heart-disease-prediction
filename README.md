@@ -12,8 +12,7 @@ heart-disease-prediction/
 ├── src/
 │   ├── preprocess.py              # Data loading & cleaning
 │   ├── train.py                   # Trains & compares 6 models
-│   ├── evaluate.py                # EDA plots + feature importance
-│   └── pdf_generator.py           # Clinical PDF diagnostic report generator
+│   └── evaluate.py                # EDA plots + feature importance
 ├── static/                        # CSS, JS, 3D anatomical assets
 ├── templates/                     # Flask Jinja2 UI views
 ├── models/                        # Saved model, scaler, figures (generated)

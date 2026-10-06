@@ -14,8 +14,6 @@ import pandas as pd
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify, send_file, Response
 
-from src.pdf_generator import generate_clinical_pdf
-
 app = Flask(__name__)
 
 # Base directories resolution
@@ -521,40 +519,6 @@ def download_template():
         csv_str,
         mimetype="text/csv",
         headers={"Content-Disposition": "attachment;filename=cardiosense_batch_sample.csv"},
-    )
-
-
-@app.route("/api/download-report-pdf", methods=["POST", "GET"])
-def download_report_pdf():
-    if request.method == "POST":
-        data = request.get_json() or {}
-        clean_vitals = {col: float(data.get(col, 0)) for col in feature_columns}
-    else:
-        patient_id = request.args.get("patient", "eleanor")
-        clean_vitals = PRESET_PATIENTS.get(patient_id, PRESET_PATIENTS["eleanor"])["vitals"]
-
-    pred, prob = perform_inference(clean_vitals)
-
-    triggers = []
-    if clean_vitals.get("trestbps", 0) >= 140:
-        triggers.append(f"Hypertension Stage 2 ({int(clean_vitals['trestbps'])} mmHg)")
-    if clean_vitals.get("chol", 0) >= 240:
-        triggers.append(f"Hypercholesterolemia ({int(clean_vitals['chol'])} mg/dl)")
-    if clean_vitals.get("oldpeak", 0) >= 1.5:
-        triggers.append(f"Ischemic ST Depression ({clean_vitals['oldpeak']:.1f} mm)")
-    if clean_vitals.get("ca", 0) > 0:
-        triggers.append(f"{int(clean_vitals['ca'])} obstructed major vessel(s)")
-    if clean_vitals.get("exang", 0) == 1:
-        triggers.append("Exercise-induced angina detected")
-    if clean_vitals.get("thalach", 0) < 120:
-        triggers.append(f"Low cardiac reserve ({int(clean_vitals['thalach'])} bpm)")
-
-    pdf_bytes = generate_clinical_pdf(clean_vitals, pred, prob, triggers)
-    age = int(clean_vitals.get("age", 50))
-    return Response(
-        pdf_bytes,
-        mimetype="application/pdf",
-        headers={"Content-Disposition": f"attachment;filename=prohealth_cardio_report_{age}yo.pdf"},
     )
 
 
